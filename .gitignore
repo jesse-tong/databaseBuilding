@@ -202,3 +202,4 @@ __marimo__/
 
 # vector database
 vector_db/
+cv_storage/
