@@ -39,7 +39,7 @@ class VectorQueryObject(BaseQueryObject):
         try:
             docs = self.engine.get_by_ids(ids)
         except Exception as e:
-            raw = self.engine._collection.get(ids=["some_id"], include=["documents", "metadatas"])
+            raw = self.engine._collection.get(ids=ids, include=["documents", "metadatas"])
 
             # Patch metadata=None to metadata={}
             docs = []

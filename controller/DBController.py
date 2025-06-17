@@ -106,7 +106,7 @@ class DBController:
         # Delete from Vector database
         self.vector_query.delete(deleted_application.vectorDbUuid)
         
-        return deleted_application
+        return deleted_application.id
     
     def searchApplications(self, query: SearchCVQuery, vectorSearchK: int = 20):
         with Session(self.sql_engine) as session:
