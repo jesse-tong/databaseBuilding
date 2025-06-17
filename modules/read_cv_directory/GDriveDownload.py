@@ -42,10 +42,12 @@ class GDriveDownload:
             # Return all valid files in the folder
             return [f"{self.save_path}/{file}" for file in os.listdir(self.save_path) if isValidCVFileType(f"{self.save_path}/{file}")]
         else:
-            outputFileName = gdown.download(url, output=os.path.join(self.save_path, 'cv.pdf'), quiet=False, use_cookies=False)
+            # Single file Google Drive link
+            # Using fuzzy=True to handle various formats of Google Drive links (for example, share links or download links)
+            outputFileName = gdown.download(url, output=os.path.join(self.save_path, 'cv.pdf'), quiet=False, use_cookies=False, fuzzy=True)
             # Check if the downloaded file is a valid CV type
             if outputFileName != None and isValidCVFileType(outputFileName):
-                return [self.save_path]
+                return [outputFileName]
             else:
                 print(f"Downloaded file is not a valid CV type: {self.save_path}")
                 return []
