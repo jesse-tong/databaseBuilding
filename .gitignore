@@ -202,4 +202,5 @@ __marimo__/
 
 # vector database
 vector_db/
+chroma.sqlite3
 cv_storage/
