@@ -34,6 +34,18 @@ class CVProcessor:
         documents = []
         for filePath in filePaths:
             mime_type, _ = mimetypes.guess_type(filePath)
+            if mime_type is None:
+                # Fallback to file extension if MIME type cannot be guessed
+                file_extension = os.path.splitext(filePath)[-1].lower()
+                if file_extension == '.pdf':
+                    mime_type = 'application/pdf'
+                elif file_extension == '.docx':
+                    mime_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                elif file_extension == '.odt':
+                    mime_type = 'application/vnd.oasis.opendocument.text'
+                else:
+                    print(f"Unsupported file type: {filePath}")
+                    continue
             if mime_type in self.processors:
                 processor: ICVFileProcessor = self.processors[mime_type]
                 documents.extend(processor.process(filePath))
