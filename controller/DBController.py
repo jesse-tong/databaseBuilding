@@ -178,13 +178,24 @@ class DBController:
                 })
         return applications
     
-    def getAllApplications(self, page: int = 1, pageSize: int = 10):
+    def getAllApplications(self, page: int = 1, pageSize: int = 10, orderBy: str = "lastUpdated"):
         
         with Session(self.sql_engine) as session:
             offset = (page - 1) * pageSize
-            sqlQuery = select(Application).offset(offset).limit(pageSize).order_by(Application.lastUpdated.desc())
+            sqlQuery = select(Application).offset(offset).limit(pageSize)
+            if orderBy == "name":
+                sqlQuery = sqlQuery.order_by(Application.name.asc())
+            elif orderBy == "nameDesc":
+                sqlQuery = sqlQuery.order_by(Application.name.desc())
+            elif orderBy == "id":
+                sqlQuery = sqlQuery.order_by(Application.id.asc())
+            elif orderBy == "lastUpdated":
+                sqlQuery = sqlQuery.order_by(Application.lastUpdated.asc())
+            else: # Default to lastUpdated descending
+                sqlQuery = sqlQuery.order_by(Application.lastUpdated.desc())
+
             results = session.exec(sqlQuery).all()
-            totalPages = (session.exec(select([func.count(Application)])).one() + pageSize - 1) // pageSize
+            totalPages = (session.exec(select(func.count(Application.id))).one() + pageSize - 1) // pageSize
             applications = []
 
             for application in results:

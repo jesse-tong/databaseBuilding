@@ -66,12 +66,12 @@ class ProcessCVController:
         
         return {"application_ids": application_ids, "message": f"Successfully added {len(application_ids)} applications."}
     
-    def updateCVFiles(self, id: int, googleDriveUrl: str | None = None, files: Union[UploadFile, List[UploadFile]] | None = None):
+    def updateCVFile(self, id: int, googleDriveUrl: str | None = None, file: UploadFile | None = None):
         documents = []
-        if not googleDriveUrl and not files:
+        if not googleDriveUrl and not file:
             raise HTTPException(status_code=400, detail="No CV files or Google Drive link provided.")
         
-        if isinstance(googleDriveUrl, str) and files:
+        if isinstance(googleDriveUrl, str) and file:
             raise HTTPException(status_code=400, detail="Please provide either a Google Drive link or files, not both.")
 
         if isinstance(googleDriveUrl, str):
@@ -84,19 +84,16 @@ class ProcessCVController:
             cvProcessor = CVProcessor(googleDriveUrl, self._generateDownloadFolder(True))
             documents.extend(cvProcessor.processCVFiles())
         
-        if files != None and isinstance(files, UploadFile):
-            files = [files]  # Ensure files is a list if a single file is provided
 
-        if files != None:
+        if file != None:
             # Process uploaded files
             documents = []
             downloadPath = self._generateDownloadFolder()
             os.makedirs(downloadPath, exist_ok=True)
-            for file in files:
-                fileName = sanitize_filename(file.filename)
-                filePath = os.path.join(downloadPath, fileName)
-                with open(filePath, "wb") as f:
-                    f.write(file.file.read())
+            fileName = sanitize_filename(file.filename)
+            filePath = os.path.join(downloadPath, fileName)
+            with open(filePath, "wb") as f:
+                f.write(file.file.read())
             cvProcessor = CVProcessor(downloadPath, self.baseCVStoragePath)
             documents.extend(cvProcessor.processCVFiles())
         
@@ -104,12 +101,9 @@ class ProcessCVController:
             raise HTTPException(status_code=400, detail="No valid CV files found.")
         
         parsed_cvs = parseCVs(documents)
-        application_ids = []
-        for parsed_cv in parsed_cvs:
-            application_id = self.dbController.updateApplication(id, parsed_cv)
-            application_ids.append(application_id)
+        application_id = self.dbController.updateApplication(id, parsed_cvs[0])
         
-        return {"application_ids": application_ids, "message": f"Successfully updated {len(application_ids)} applications."}
+        return {"application_ids": application_id, "message": f"Successfully updated application with id {application_id}."}
     
     def getApplication(self, id: int):
         application = self.dbController.getApplication(id)
@@ -137,13 +131,14 @@ class ProcessCVController:
         
         return applications
     
-    def getApplications(self, page: int = 1, pageSize: int = 10):
+    def getApplications(self, page: int = 1, pageSize: int = 10, orderBy: str = None):
         """
         Get paginated list of applications.
+        orderBy can be 'name', 'nameDesc', 'id', 'lastUpdated', default sorting by 'lastUpdated' descending.
         """
         if page < 1 or pageSize < 1:
             raise HTTPException(status_code=422, detail="Page and page size must be greater than 0.")
-        applications = self.dbController.getAllApplications(page, pageSize)
+        applications = self.dbController.getAllApplications(page, pageSize, orderBy)
         if not applications:
             raise HTTPException(status_code=404, detail="No applications found.")
         

@@ -58,7 +58,7 @@ Will return a list of the corresponding
 
 **PUT** `/cv/update/{id}`
 
-Update CV files for an existing application.
+Update CV file for an existing application.
 
 **Path Parameters**:
 - `id` (integer, required): Application ID to update
@@ -66,13 +66,14 @@ Update CV files for an existing application.
 **Content-Type**: `multipart/form-data`
 
 **Parameters**:
-- `googleDriveUrl` (string, optional): Google Drive URL for CV files (must be a shared link with public view, can be a link to either a single file or directory).
-- `files` (array of files, optional): CV files to upload (PDF, DOCX, ODT)
+- `googleDriveUrl` (string, optional): Google Drive URL for CV file (must be a shared link with public view, can be only a link to a file, as this API point does not support folder).
+- `file` (array of files, optional): CV file to upload (PDF, DOCX, ODT)
+- There should not be both 
 
 **Request Example**:
 ```bash
 curl -X PUT "http://localhost:8000/cv/update/1" \
-  -F "files=@updated_resume.pdf"
+  -F "file=@updated_resume.pdf"
 ```
 
 **Response**:
@@ -98,6 +99,24 @@ curl -X PUT "http://localhost:8000/cv/update/1" \
 
 Search for CVs based on various criteria using both structured and semantic search.
 
+##### Search parameters is a SearchCVQuery object (JSON) with the following fields
+
+For name, email, phone, linkedIn, gitRepo, experiencedSkills: Will match any application containing the keyword.
+
+For skills, jobTitles, location, requirementDescription: Will search for applications that match the best to the keywords in the database.
+
+- `name`: String (Applicant name in the CV, optional)
+- `email`: String (Email address, optional)
+- `phone`: String (Phone number, optional)
+- `linkedIn`: String (LinkedIn URL, optional)
+- `gitRepo`: String (Git repository URL, optional)
+- `experiencedSkills`: A JSON object with the key is the skill or role (with real experience) to search (String) with value is a float number indicating minimum years for applications (Float) (optional)
+- `keywords`: Array of strings (Keywords to search, optional)
+- `skills`: Array of strings (Skills to search, optional)
+- `jobTitles`: Array of strings (Job titles to search, optional)
+- `location`: String (Address or current work location of the , optional)
+- `requirementDescription`: String (Job requirements description, optional)
+
 **Content-Type**: `application/json`
 
 **Request Body** (`SearchCVQuery`):
@@ -109,7 +128,7 @@ Search for CVs based on various criteria using both structured and semantic sear
   "linkedIn": "/josh",
   "gitRepo": "/josh",
   "experiencedSkills": {
-    "Front-end": 3
+    "Front-end": 2.5
   },
   "keywords": [
     "University of Maryland"
@@ -299,10 +318,11 @@ Retrieve a paginated list of all CVs.
 **Query Parameters**:
 - `page` (integer, optional, default: 1): Page number
 - `size` (integer, optional, default: 10): Number of items per page
+- `orderBy` (string, optional, default: null): Order to sort the result. orderBy can be 'name', 'nameDesc', 'id', 'lastUpdated', default the option null is sorting by 'lastUpdated' descending. If using 'lastUpdated', the order will be sorting by 'lastUpdated' but ascending.
 
 **Request Example**:
 ```bash
-curl -X GET "http://localhost:8000/cv/?page=1&size=20"
+curl -X GET "http://localhost:8000/cv/?page=1&size=2&orderBy=name"
 ```
 
 **Response**:
@@ -310,19 +330,61 @@ curl -X GET "http://localhost:8000/cv/?page=1&size=20"
 [
   {
     "application": {
-      "id": 1,
-      "vectorDbUuid": "uuid-string",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "phone": "+1234567890",
-      "linkedIn": "https://linkedin.com/in/johndoe",
-      "gitRepo": "https://github.com/johndoe",
-      "yearsOfExperience": 5.0,
-      "lastUpdated": "2025-06-17T10:30:00"
+      "id": 10,
+      "name": "Shubham",
+      "gitRepo": null,
+      "lastUpdated": "2025-06-18T17:32:18",
+      "vectorDbUuid": "33ba69e6-cb96-4de0-b251-890e92b7ce59",
+      "email": null,
+      "phone": null,
+      "linkedIn": null,
+      "yearsOfExperience": null
     },
-    "education": [...],
-    "experiencedSkills": [...],
-    "skillsAndExperience": "..."
+    "education": [
+      {
+        "application_id": 10,
+        "id": 20,
+        "institution": "University of Maryland",
+        "degree": "Master’s in Computer Engineering",
+        "gpa": null,
+        "year": "May 2019"
+      },
+      {
+        "application_id": 10,
+        "id": 21,
+        "institution": "University of Pune",
+        "degree": "Bachelor’s in Electronics and Telecomms Engineering",
+        "gpa": null,
+        "year": "May 2017"
+      }
+    ],
+    "experiencedSkills": [],
+    "skillsAndExperience": "Address: None\nSkills: \nJava 8, Java 10, JavaScript (ES6), Python, C++, ReactJS, HTML5, CSS3, Sass, Bootstrap4, Figma, Github, Bitbucket, Jira, Git Workflows, Bitbucket Pipelines, Agile, Scrum, Kanban, Trello, Slack, Spring Boot, RESTful Web Services, Microservices, Hibernate, JDBC, JPA, PL/SQL, JUnit4, Postman, Designing APIs, Consuming APIs, App integrations, Design Patterns, SOLID principles\n\nWork Experiences: \n\n    Senior Software Engineer at Infosys Technologies Aug 2019 –Present\n    Indianapolis, IN\n    - Successfully developed methodologies to streamline the process of data conversion leveraging latest tools\n    - Created optimized PL/SQL scripts to automate data gathering and transformation on various database technologies\n    - Refactored existing processes and built component to reduce manual efforts and performed unit tests\n    - Conducted meetings and workshops with client to document requirements and provide roadmap for the project\n    \n\n    Java Developer at School of Education Jan –May 2019\n    College Park, MD\n    - Successfully architectured and implemented features in Spring Boot to enhance the capabilities of web application\n    - Designed and developed various UI pages in ReactJS to support application and contributed in creating process workflows\n    - Achieved a maintainable and optimised code by refactoring and following best coding and design practices\n    - Implemented unit tests in JUnit4 and Mockito providing full code coverage\n    \n\n    Software Engineer Intern at Institute of Physical Sciences & Tech Jan2018–Feb2019\n    College Park, MD\n    - Designed and developed an application to automate the production of binary executables using Python and Pandas dataframes\n    - Implemented UI components using ReactJS with custom CSS and Bootstrap4 for layout and positioning\n    - Developed applications in Test Driven Development and performed extensive code reviews and thorough testing\n    - Interacted with stakeholders to gather and document requirements and provided weekly updates on progress and consultation\n    \n\nProjects: \n\n    Podcastinator\n    Search for your favorite podcast from around 2 million podcasts and 91 million episodes all in one place.\n   "
+  },
+  {
+    "application": {
+      "id": 8,
+      "name": "Hamza Bek",
+      "gitRepo": "Hamza Bek",
+      "lastUpdated": "2025-06-18T17:32:17",
+      "vectorDbUuid": "e825928e-ceba-4b62-bdb5-133bf144cf64",
+      "email": "Hamzamrbek@gmail.com",
+      "phone": "+201123452806",
+      "linkedIn": "Hamza Bek",
+      "yearsOfExperience": null
+    },
+    "education": [
+      {
+        "application_id": 8,
+        "id": 18,
+        "institution": "Arab Open University",
+        "degree": "Bachelor of Business Management",
+        "gpa": "3.5/ 4.0",
+        "year": "2026"
+      }
+    ],
+    "experiencedSkills": [],
+    "skillsAndExperience": "Address: Egypt, Cairo\nSkills: \nC#, .NET, Blazor, SignalR, Entity Framework, SQL, Tailwind CSS, HTML, CSS, Git, RESTful APIs\n\nWork Experiences: \n\n\nProjects: \n\n    South Mart - Full E-Commerce Management System\n    - User Authentication and Role Management: Implemented secure user registration, login, and role-based access control for customers and administrators.\n    - Product Catalog Management: Built an intuitive interface for adding, updating, and categorizing products with advanced search and filtering capabilities\n    - Order and Inventory Management: Developed functionality for tracking orders, managing stock levels, and sending low-stock notifications\n    - Admin Dashboard: Designed a comprehensive dashboard for monitoring sales, revenue, and customer data analytics\n    \n\n    AOU Community Platform - Real-Time Chat, Social Networking, Marketplace, and Event Management\n    - Real-Time Chat Feature: Integrated a real-time chat feature using SignalR, enabling instant communication between users and fostering collaboration\n    - Post and Announcement System: Developed a system for users to create, share, and interact with posts, announcements, and community updates\n    - Marketplace Integration: Built a marketplace feature allowing users to buy and sell items with secure transactions and easy listing management\n    \n\n    TailsBlazor - Component Library for Blazor Aplications\n    - Custom Blazor Components: Developed a collection of reusable, customizable components tailored for Blazor applications, enhancing UI consistency and user experience\n    - Tailwind CSS Integration: Integrated Tailwind CSS to create responsive, modern, and visually appealing UI components that adapt seamlessly to different screen sizes\n    "
   }
 ]
 ```
@@ -360,24 +422,6 @@ curl -X GET "http://localhost:8000/cv/?page=1&size=20"
 - `application_id`: Integer (Foreign key to Application)
 - `skill`: String (Skill name)
 - `yearsOfExperience`: Float (Years of experience in skill, optional)
-
-### SearchCVQuery
-
-For name, email, phone, linkedIn, gitRepo, experiencedSkills: Will match any application containing the keyword.
-
-For skills, jobTitles, location, requirementDescription: Will search for applications that match the best to the keywords in the database.
-
-- `name`: String (Applicant name in the CV, optional)
-- `email`: String (Email address, optional)
-- `phone`: String (Phone number, optional)
-- `linkedIn`: String (LinkedIn URL, optional)
-- `gitRepo`: String (Git repository URL, optional)
-- `experiencedSkills`: A JSON object with the key is the skill or role (with real experience) to search ( optional)
-- `keywords`: Array of strings (Keywords to search, optional)
-- `skills`: Array of strings (Skills to search, optional)
-- `jobTitles`: Array of strings (Job titles to search, optional)
-- `location`: String (Address or current work location of the , optional)
-- `requirementDescription`: String (Job requirements description, optional)
 
 ---
 

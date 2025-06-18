@@ -23,13 +23,13 @@ async def uploadCVFiles(googleDriveUrl: Annotated[Optional[str], Form()] = None,
      
 @router.put("/update/{id}")
 async def updateCVFiles(id: int, 
-                        googleDriveUrl: Annotated[Optional[str], Form()] = None, files: Optional[List[UploadFile]] = File(None), 
+                        googleDriveUrl: Annotated[Optional[str], Form()] = None, file: Optional[UploadFile] = File(None), 
                         processCVController: ProcessCVController = Depends(getProcessCVController)):
     """
     Update CV files or a Google Drive link for an existing application.
     """
     try:
-        return processCVController.updateCVFiles(id, googleDriveUrl=googleDriveUrl, files=files)
+        return processCVController.updateCVFile(id, googleDriveUrl=googleDriveUrl, file=file)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -79,13 +79,14 @@ async def deleteCV(id: str,
     
 @router.get("/")
 async def listCVsByPage(page: int = 1, 
-                        size: int = 10, 
+                        size: int = 10,
+                        orderBy: Optional[str] = None,
                         processCVController: ProcessCVController = Depends(getProcessCVController)):
     """
     List CVs with pagination.
     """
     try:
-        return processCVController.getApplications(page, size)
+        return processCVController.getApplications(page, size, orderBy)
     except HTTPException as e:
         raise e
     except Exception as e:
