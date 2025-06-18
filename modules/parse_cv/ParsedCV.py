@@ -10,12 +10,16 @@ def roundYoE(yearsOfExperience: str) -> float | None:
         return None
 
 class ParsedCV():
+    """
+    A class to represent a parsed CV with structured data.
+    """
     def __init__(self, cvData: dict):
         self.name = cvData.get("name")
         self.email = cvData.get("email")
         self.phone = cvData.get("phone")
         self.linkedIn = cvData.get("linkedIn")
         self.gitRepo = cvData.get("gitRepo")
+        self.address = cvData.get("address")
         self.workExperiences = cvData.get("workExperiences", [])
         self.projects = cvData.get("projects", [])
         self.educations = [

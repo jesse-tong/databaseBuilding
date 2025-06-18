@@ -1,6 +1,7 @@
 from langchain.vectorstores import VectorStore
 from langchain_core.documents import Document
 from sqlmodel import Session, select, and_
+from sqlalchemy import func
 
 from database.SqlQuery import SqlQueryObject
 from database.VectorQuery import VectorQueryObject
@@ -47,8 +48,9 @@ class DBController:
         )
         
         skillsAndExperienceDocument = Document(
-            page_content=f"Skills: \n{'\n'.join(parsed_cv.skills)}\n\n"
-                         f"Work Experiences: \n{'\n'.join(parsed_cv.workExperiences)}\n\n"
+            page_content=f"Address: {parsed_cv.address}\n" +
+                         f"Skills: \n{', '.join(parsed_cv.skills)}\n\n" +
+                         f"Work Experiences: \n{'\n'.join(parsed_cv.workExperiences)}\n\n" +
                          f"Projects: \n{'\n'.join(parsed_cv.projects)}",
             metadata={"application_id": application.id}
         )
@@ -88,7 +90,7 @@ class DBController:
                 return None
             
             # Get from Vector database
-            vectorDoc = self.vector_query.select(query=application.vectorDbUuid)
+            vectorDoc = self.vector_query.selectByIds([application.vectorDbUuid])
             
             return {
                 "application": application,
@@ -106,7 +108,7 @@ class DBController:
         # Delete from Vector database
         self.vector_query.delete(deleted_application.vectorDbUuid)
         
-        return deleted_application.id
+        return deleted_application
     
     def searchApplications(self, query: SearchCVQuery, vectorSearchK: int = 20):
         with Session(self.sql_engine) as session:
@@ -177,10 +179,12 @@ class DBController:
         return applications
     
     def getAllApplications(self, page: int = 1, pageSize: int = 10):
+        
         with Session(self.sql_engine) as session:
             offset = (page - 1) * pageSize
-            sqlQuery = select(Application).offset(offset).limit(pageSize)
+            sqlQuery = select(Application).offset(offset).limit(pageSize).order_by(Application.lastUpdated.desc())
             results = session.exec(sqlQuery).all()
+            totalPages = (session.exec(select([func.count(Application)])).one() + pageSize - 1) // pageSize
             applications = []
 
             for application in results:
@@ -191,7 +195,7 @@ class DBController:
                     "experiencedSkills": application.skills if application.skills else [],
                     "skillsAndExperience": vectorDoc[0].page_content if vectorDoc else None
                 })
-        return applications
+        return { 'pageCount': totalPages, 'applications': applications }
 
             
 

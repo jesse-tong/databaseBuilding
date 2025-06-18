@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form
+
 from shared.Dependencies import getProcessCVController
 from shared.QueryObject import SearchCVQuery
 from controller.ProcessCVController import ProcessCVController
 from typing import Annotated, Optional, List
 
-router = APIRouter(tags=["cv"])
+router = APIRouter(prefix="/cv", tags=["cv"])
+
 
 @router.post("/upload")
 async def uploadCVFiles(googleDriveUrl: Annotated[Optional[str], Form()] = None, files: Optional[List[UploadFile]] = File(None), 

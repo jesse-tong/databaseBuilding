@@ -29,6 +29,7 @@ cvParsingPrompt = """
     - The phone number of the applicant should be in the <Phone> and </Phone> tags.
     - The LinkedIn profile URL of the applicant should be in the <LinkedIn> and </LinkedIn> tags.
     - The Git repository URL (like Github and GitLab) of the applicant should be in the <GitRepo> and </GitRepo> tags.
+    - The address (their home address or current working address) of the applicant should be in the <Address> and </Address> tags.
     - Each work experience entry should be in the <WorkExperience> and </WorkExperience> tags with all the text in that entry.
     - Each project entry should be in the <Project> and </Project> tags with all the text in that entry.
     - Each education entry should be in the <Education> and </Education> tags with the following fields:
@@ -45,6 +46,7 @@ cvParsingPrompt = """
     <EXAMPLE_CV>
     Name: John Doe  Email: johndoe@gmail.com  Phone: +1234567890
     LinkedIn: https://www.linkedin.com/in/johndoe  Github: https://github.com/johndoe
+    Address: 123 Main St, City, Country
     Work Experience:
     ExpriLabs          2022-2024
     - Developed AI models for natural language processing.
@@ -71,6 +73,7 @@ cvParsingPrompt = """
         <Phone>+1234567890</Phone>
         <LinkedIn>https://www.linkedin.com/in/johndoe</LinkedIn>
         <GitRepo>https://github.com/johndoe</GitRepo>
+        <Address>123 Main St, City, Country</Address>
         <WorkExperience>
         ExpriLabs 2022-2024
         - Developed AI models for natural language processing.
@@ -129,6 +132,7 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
     phone = re.search(r"<Phone>(.*?)</Phone>", cvText)
     linkedIn = re.search(r"<LinkedIn>(.*?)</LinkedIn>", cvText)
     gitRepo = re.search(r"<GitRepo>(.*?)</GitRepo>", cvText)
+    address = re.search(r"<Address>(.*?)</Address>", cvText)
     workExperiences = re.findall(r"<WorkExperience>(.*?)</WorkExperience>", cvText, re.DOTALL)
     projects = re.findall(r"<Project>(.*?)</Project>", cvText, re.DOTALL)
     educations = re.findall(r"<Education>(.*?)</Education>", cvText, re.DOTALL)
@@ -155,6 +159,7 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
         "phone": phone.group(1) if phone else None,
         "linkedIn": linkedIn.group(1) if linkedIn else None,
         "gitRepo": gitRepo.group(1) if gitRepo else None,
+        "address": address.group(1) if address else None,
         "workExperiences": workExperiences,
         "projects": projects,
         "educations": education_entries,

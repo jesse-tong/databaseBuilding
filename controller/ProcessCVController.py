@@ -30,7 +30,11 @@ class ProcessCVController:
         if not googleDriveUrl and not files:
             raise HTTPException(status_code=400, detail="No CV files or Google Drive link provided.")
         
-        if isinstance(googleDriveUrl, str):
+        isGoogleDriveUrl = isinstance(googleDriveUrl, str) and re.match(r"https?://(?:drive)\.google\.com/[^\s]+", googleDriveUrl)
+        if not isGoogleDriveUrl and not files:
+            raise HTTPException(status_code=400, detail="No CV files or Google Drive link provided.")
+        
+        if isGoogleDriveUrl:
             # Process Google Drive link
             cvProcessor = CVProcessor(googleDriveUrl, self._generateDownloadFolder(True))
             documents.extend(cvProcessor.processCVFiles())
@@ -60,13 +64,16 @@ class ProcessCVController:
             application_id = self.dbController.addApplication(parsed_cv)
             application_ids.append(application_id)
         
-        return {"application_ids": application_ids}
+        return {"application_ids": application_ids, "message": f"Successfully added {len(application_ids)} applications."}
     
     def updateCVFiles(self, id: int, googleDriveUrl: str | None = None, files: Union[UploadFile, List[UploadFile]] | None = None):
         documents = []
         if not googleDriveUrl and not files:
             raise HTTPException(status_code=400, detail="No CV files or Google Drive link provided.")
         
+        if isinstance(googleDriveUrl, str) and files:
+            raise HTTPException(status_code=400, detail="Please provide either a Google Drive link or files, not both.")
+
         if isinstance(googleDriveUrl, str):
             # Process Google Drive link
             if 'folders' in googleDriveUrl:
@@ -102,7 +109,7 @@ class ProcessCVController:
             application_id = self.dbController.updateApplication(id, parsed_cv)
             application_ids.append(application_id)
         
-        return {"application_ids": application_ids}
+        return {"application_ids": application_ids, "message": f"Successfully updated {len(application_ids)} applications."}
     
     def getApplication(self, id: int):
         application = self.dbController.getApplication(id)
@@ -134,6 +141,8 @@ class ProcessCVController:
         """
         Get paginated list of applications.
         """
+        if page < 1 or pageSize < 1:
+            raise HTTPException(status_code=422, detail="Page and page size must be greater than 0.")
         applications = self.dbController.getAllApplications(page, pageSize)
         if not applications:
             raise HTTPException(status_code=404, detail="No applications found.")
