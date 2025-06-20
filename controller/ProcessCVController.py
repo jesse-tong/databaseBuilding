@@ -102,7 +102,8 @@ class ProcessCVController:
         
         parsed_cvs = parseCVs(documents)
         application_id = self.dbController.updateApplication(id, parsed_cvs[0])
-        
+        if application_id is None:
+            raise HTTPException(status_code=404, detail="Application not found. Cannot update application.")
         return {"application_ids": application_id, "message": f"Successfully updated application with id {application_id}."}
     
     def getApplication(self, id: int):

@@ -20,6 +20,7 @@ class ParsedCV():
         self.linkedIn = cvData.get("linkedIn")
         self.gitRepo = cvData.get("gitRepo")
         self.address = cvData.get("address")
+        self.totalYoE = roundYoE(str(cvData.get("totalYearsOfExperience", 0)))
         self.workExperiences = cvData.get("workExperiences", [])
         self.projects = cvData.get("projects", [])
         self.educations = [
@@ -34,11 +35,17 @@ class ParsedCV():
             skill for skill in cvData.get("skills", [])
         ]
 
-        self.experiencedSkills = [
+        self.experiencedSkills = list(filter(lambda x: x != None, [
             {
                 "skill": skill.get("skill"),
-                "yearsOfExperience": roundYoE(str(skill.get('yearsOfExperience'))) if skill.get("yearsOfExperience") else None
-            } for skill in cvData.get("experiencedSkills", [])   
-        ]#cvData.get("experiencedSkills", [])
+                "yearsOfExperience": roundYoE(str(skill.get('yearsOfExperience')))
+            } if skill.get("yearsOfExperience") else None for skill in cvData.get("experiencedSkills", [])   
+        ])) # Should only include skills with years of experience
+
+    def __str__(self):
+        return f"ParsedCV(name={self.name},\n  email={self.email},\n  phone={self.phone},\n  linkedIn={self.linkedIn},\n  gitRepo={self.gitRepo},\n  totalYoE={self.totalYoE}" + \
+        f",\n  workExperiences={self.workExperiences},\n  projects={self.projects},\n  educations={self.educations},\n  skills={self.skills},\n  experiencedSkills={self.experiencedSkills})"
+    
+    
 
     

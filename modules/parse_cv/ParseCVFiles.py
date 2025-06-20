@@ -28,6 +28,8 @@ cvParsingPrompt = """
     - The email of the applicant should be in the <Email> and </Email> tags.
     - The phone number of the applicant should be in the <Phone> and </Phone> tags.
     - The LinkedIn profile URL of the applicant should be in the <LinkedIn> and </LinkedIn> tags.
+    - Total years of experience (work experience + projects) of the applicant should be in the <YearOfExperience> and </YearOfExperience> tags.
+    - The total years of experience should be calculated by summing the years of experience from work experiences and significant projects (such as internships, freelance work, college/university graduation projects,... etc.).
     - The Git repository URL (like Github and GitLab) of the applicant should be in the <GitRepo> and </GitRepo> tags.
     - The address (their home address or current working address) of the applicant should be in the <Address> and </Address> tags.
     - Each work experience entry should be in the <WorkExperience> and </WorkExperience> tags with all the text in that entry.
@@ -39,7 +41,8 @@ cvParsingPrompt = """
         + GPA: in the <GPA> and </GPA> tags.
     - Each skill entry should be in the <Skill> and </Skill> tags with all the text in that entry.
     - For skills and job titles with experience (e.g. Spring Boot, embedded programming, project management,...), for each of them 
-    should be in the <ExperiencedSkill> and <ExperiencedSkill> tags with corresponding years of experience in the <YoE> and </YoE> tag in the same line of that skill/job title.
+    should be in the <ExperiencedSkill> and <ExperiencedSkill> tags with corresponding years of experience in the <YoE> and </YoE> tag in the same line of that skill/job title. 
+    If that skill doesn't have a work experience with time associated with it, parse it like other skill entries (wrap it in <Skill> and </Skill> tags) instead.
     - Each certification entry should be in the <Certification> and </Certification> tags with all the text in that entry.
 
     Example (do not parse this example, just use it as a reference for the output format):
@@ -73,6 +76,7 @@ cvParsingPrompt = """
         <Phone>+1234567890</Phone>
         <LinkedIn>https://www.linkedin.com/in/johndoe</LinkedIn>
         <GitRepo>https://github.com/johndoe</GitRepo>
+        <YearOfExperience>4</YearOfExperience>
         <Address>123 Main St, City, Country</Address>
         <WorkExperience>
         ExpriLabs 2022-2024
@@ -133,6 +137,7 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
     linkedIn = re.search(r"<LinkedIn>(.*?)</LinkedIn>", cvText)
     gitRepo = re.search(r"<GitRepo>(.*?)</GitRepo>", cvText)
     address = re.search(r"<Address>(.*?)</Address>", cvText)
+    totalYoE = re.search(r"<YearOfExperience>(.*?)</YearOfExperience>", cvText)
     workExperiences = re.findall(r"<WorkExperience>(.*?)</WorkExperience>", cvText, re.DOTALL)
     projects = re.findall(r"<Project>(.*?)</Project>", cvText, re.DOTALL)
     educations = re.findall(r"<Education>(.*?)</Education>", cvText, re.DOTALL)
@@ -160,6 +165,7 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
         "linkedIn": linkedIn.group(1) if linkedIn else None,
         "gitRepo": gitRepo.group(1) if gitRepo else None,
         "address": address.group(1) if address else None,
+        "totalYearsOfExperience": roundYoE(totalYoE.group(1)) if totalYoE else None,
         "workExperiences": workExperiences,
         "projects": projects,
         "educations": education_entries,

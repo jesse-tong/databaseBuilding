@@ -6,7 +6,7 @@ This document describes the database schemas used in the application, which util
 
 - The ORM I used is SQLModel which is the most used in FastAPI and is based in SQLAlchemy and Pydantic.
 - The SQL database uses three main tables defined in `schema/Application.py`:
-[]()
+
 
 ### 1. Application Table
 The main table storing applicant information:

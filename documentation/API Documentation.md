@@ -72,15 +72,15 @@ Update CV file for an existing application.
 
 **Request Example**:
 ```bash
-curl -X PUT "http://localhost:8000/cv/update/1" \
+curl -X PUT "http://localhost:8000/cv/update/9" \
   -F "file=@updated_resume.pdf"
 ```
 
 **Response**:
 ```json
 {
-  "application_ids": [1],
-  "message": "Successfully updated 1 applications."
+  "application_ids": 9,
+  "message": "Successfully updated application with id 9."
 }
 ```
 
@@ -89,6 +89,7 @@ curl -X PUT "http://localhost:8000/cv/update/1" \
 - `400`: Google Drive folders are not supported for updates
 - `400`: Invalid Google Drive link provided
 - `400`: No valid CV files found
+- `404`: Application not found. Cannot update application.
 - `500`: Internal server error
 
 ---
@@ -138,6 +139,21 @@ For skills, jobTitles, location, requirementDescription: Will search for applica
   ],
   "jobTitles": ["Senior Software Engineer"],
   "location": "United States",
+  "requirementDescription": "Having experience in cloud, ASP.NET, Amazon Web Services and databases such as MongoDB and MySQL"
+}
+```
+
+Note you can omit some of the parameters above to exclude these in searching, for example:
+
+```json
+{
+  "gitRepo": "/josh",
+  "experiencedSkills": {
+    "Front-end": 2.5
+  },
+  "skills": [
+    "Python", "ASP.NET", "AWS"
+  ],
   "requirementDescription": "Having experience in cloud, ASP.NET, Amazon Web Services and databases such as MongoDB and MySQL"
 }
 ```
@@ -330,7 +346,7 @@ curl -X GET "http://localhost:8000/cv/?page=1&size=2&orderBy=name"
 [
   {
     "application": {
-      "id": 10,
+      "id": 8,
       "name": "Shubham",
       "gitRepo": null,
       "lastUpdated": "2025-06-18T17:32:18",
@@ -363,7 +379,7 @@ curl -X GET "http://localhost:8000/cv/?page=1&size=2&orderBy=name"
   },
   {
     "application": {
-      "id": 8,
+      "id": 10,
       "name": "Hamza Bek",
       "gitRepo": "Hamza Bek",
       "lastUpdated": "2025-06-18T17:32:17",
@@ -377,7 +393,7 @@ curl -X GET "http://localhost:8000/cv/?page=1&size=2&orderBy=name"
       {
         "application_id": 8,
         "id": 18,
-        "institution": "Arab Open University",
+        "institution": "Open University",
         "degree": "Bachelor of Business Management",
         "gpa": "3.5/ 4.0",
         "year": "2026"

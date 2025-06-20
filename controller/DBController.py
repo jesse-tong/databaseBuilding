@@ -31,6 +31,7 @@ class DBController:
             phone=parsed_cv.phone,
             linkedIn=parsed_cv.linkedIn,
             gitRepo=parsed_cv.gitRepo,
+            yearsOfExperience=parsed_cv.totalYoE,
             education=[
                 Education(
                     degree=edu.get('degree'),
@@ -73,7 +74,9 @@ class DBController:
         application.id = id
         
         # Update in SQL database
-        self.sql_query.updateWithObject(application.id, application)
+        updateId = self.sql_query.updateWithObject(application.id, application)
+        if updateId is None:
+            return None
         
         # Update in Vector database
         self.vector_query.update(application.vectorDbUuid, skillsAndExperienceDocument)
