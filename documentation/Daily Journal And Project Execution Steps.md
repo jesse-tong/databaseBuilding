@@ -83,7 +83,17 @@ None
 ### Thursday, June 19th 2025
 #### Task Performed
 - Start writing final technical presentation
-- 
+- Completing project execution steps
+#### Challenges/Issues Faced And Solutions
+None
+#### Decision Made
+None
+#### Next Steps
+- Continue writing final technical presentation
+- Complete daily journal and project execution steps
+### Friday, June 20th 2025
+#### Tasks Performed
+
 
 
 
