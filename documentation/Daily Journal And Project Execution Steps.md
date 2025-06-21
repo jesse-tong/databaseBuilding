@@ -93,7 +93,14 @@ None
 - Complete daily journal and project execution steps
 ### Friday, June 20th 2025
 #### Tasks Performed
-
+- Complete final technical presentation
+- Complete daily journal and project execution steps
+#### Challenges/Issues Faced And Solutions
+None
+#### Decision Made
+None
+#### Next Steps
+- Bundling the project and s
 
 
 
