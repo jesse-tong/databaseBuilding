@@ -52,7 +52,8 @@
 #### Decision Made
 None
 #### Next Steps
-
+- Starting documenting API and creating API documentation.
+- Fixing bugs in the APIs.
 ### Monday, June 16th 2025
 - Because of personal circumstances, I couldn't proceed the project.
 ### Tuesday, June 17th 2025
@@ -67,9 +68,24 @@ None
 None
 #### Next Steps
 - Preparing initial technical documentation.
-- Adding features and fixing bugs
+- Adding features and fixing bugs.
 ### Wednesday, June 18th 2025
 #### Tasks Performed
+- Drafting initial technical presentation.
+- Fixing a bug related to updating documents where the the controller method returns the old object instead of the new object.
+- Add orderBy (result order) in "/cv" route (get applications by page).
+#### Challenges/Issues Faced And Solutions
+None
+#### Decision Made
+None
+#### Next Steps
+- Writing final presentation.
+### Thursday, June 19th 2025
+#### Task Performed
+- Start writing final technical presentation
+- 
+
+
 
 
 

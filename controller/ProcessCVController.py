@@ -135,7 +135,7 @@ class ProcessCVController:
     def getApplications(self, page: int = 1, pageSize: int = 10, orderBy: str = None):
         """
         Get paginated list of applications.
-        orderBy can be 'name', 'nameDesc', 'id', 'lastUpdated', default sorting by 'lastUpdated' descending.
+        orderBy can be 'name', 'nameDesc', 'id', 'lastUpdated' (lastUpdated ascending), default sorting by 'lastUpdated' descending.
         """
         if page < 1 or pageSize < 1:
             raise HTTPException(status_code=422, detail="Page and page size must be greater than 0.")
