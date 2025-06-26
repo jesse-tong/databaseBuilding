@@ -16,7 +16,7 @@ if 'experienced_skills' not in st.session_state:
 
 def upload_cv_files():
     """Upload CV files section"""
-    st.header("📄 Upload CV Files")
+    st.header("Upload CV Files")
     
     col1, col2 = st.columns(2)
     
@@ -73,7 +73,7 @@ def upload_cv_files():
 
 def search_cvs():
     """Search CVs section"""
-    st.header("🔍 Search CVs")
+    st.header("Search CVs")
     
     with st.expander("Basic Search", expanded=True):
         col1, col2 = st.columns(2)
@@ -190,7 +190,7 @@ def search_cvs():
 
 def list_all_cvs():
     """List all CVs with pagination"""
-    st.header("📑 All CVs")
+    st.header("All CVs With Pagination")
     
     col1, col2, col3 = st.columns(3)
     
@@ -225,7 +225,7 @@ def list_all_cvs():
 
 def view_cv_details():
     """View detailed CV information"""
-    st.header("👁️ View CV Details")
+    st.header("View CV Details")
     
     cv_id = st.text_input("Enter CV ID")
     
@@ -248,7 +248,7 @@ def view_cv_details():
 
 def delete_cv():
     """Delete a CV"""
-    st.header("🗑️ Delete CV")
+    st.header("Delete CV")
     
     cv_id = st.text_input("Enter CV ID to delete")
     
@@ -271,7 +271,7 @@ def delete_cv():
 
 def update_cv():
     """Update CV section"""
-    st.header("✏️ Update CV")
+    st.header("Update CV")
     
     cv_id = st.text_input("CV ID to update")
     
