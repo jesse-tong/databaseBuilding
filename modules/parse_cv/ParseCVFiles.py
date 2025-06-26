@@ -37,7 +37,7 @@ cvParsingPrompt = """
     - Each parsed CV object should be in the <ParsedCV> and </ParsedCV> tags.
     - The values in each parsed CV object should be kept in the original language of the CV.
     - If a field is not present in the CV, it should be omitted from the output.
-    - The name of the applicant should be in the <Name> and </Name> tags.
+    - The name of the applicant should be in the <ApplicationName> and </ApplicationName> tags.
     - The email of the applicant should be in the <Email> and </Email> tags.
     - The phone number of the applicant should be in the <Phone> and </Phone> tags.
     - The LinkedIn profile URL of the applicant should be in the <LinkedIn> and </LinkedIn> tags.
@@ -88,7 +88,7 @@ cvParsingPrompt = """
     The output should be in the following format:
 
     <ParsedCV>
-        <Name>John Doe</Name>
+        <ApplicationName>John Doe</ApplicationName>
         <Email>johndoe@gmail.com</Email>
         <Phone>+1234567890</Phone>
         <LinkedIn>https://www.linkedin.com/in/johndoe</LinkedIn>
@@ -167,7 +167,7 @@ def parsingDateString(dateString: str) -> datetime | None:
         return None
 
 def parseEachCVResponse(cvText: str) -> ParsedCV:
-    name = re.search(r"<Name>(.*?)</Name>", cvText)
+    name = re.search(r"<ApplicationName>(.*?)</ApplicationName>", cvText)
     email = re.search(r"<Email>(.*?)</Email>", cvText)
     phone = re.search(r"<Phone>(.*?)</Phone>", cvText)
     linkedIn = re.search(r"<LinkedIn>(.*?)</LinkedIn>", cvText)
