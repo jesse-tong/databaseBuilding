@@ -48,7 +48,7 @@ cvParsingPrompt = """
     - Each work experience entry should be in the <WorkExperience> and </WorkExperience> tags.
     - In each work experience entry, the company name should be in <Company> and </Company>, followed by the position held in <Position> and </Position> tags, start date between <StartDate> and </StartDate> tags, 
     end date (if applicable) between <EndDate> and </EndDate> tags, and description of the work experience in <Description> and </Description> tags.
-    - Each project entry should be in the <Project> and </Project> tags, in each project entry, the name of the project should be in <Name> and </Name> tags,
+    - Each project entry should be in the <Project> and </Project> tags, in each project entry, the name of the project should be in <ProjectName> and </ProjectName> tags,
         followed by the description of the project in <Description> and </Description> tags, start date between <StartDate> and </StartDate> tags,
         end date (if applicable) between <EndDate> and </EndDate> tags.
     - Each education entry should be in the <Education> and </Education> tags with the following fields:
@@ -116,7 +116,7 @@ cvParsingPrompt = """
             </Description>
         </WorkExperience>
         <Project>
-            <Name>Detect Fraudulent Transactions using Machine Learning</Name>
+            <ProjectName>Detect Fraudulent Transactions using Machine Learning</ProjectName>
             <StartDate>June 2019</StartDate>
             <EndDate>December 2019</EndDate>
             <Description>
@@ -212,13 +212,13 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
 
     project_entries = []
     for project in projects:
-        name = re.search(r"<Name>(.*?)</Name>", project)
+        projectName = re.search(r"<ProjectName>(.*?)</ProjectName>", project)
         startDate = re.search(r"<StartDate>(.*?)</StartDate>", project)
         endDate = re.search(r"<EndDate>(.*?)</EndDate>", project)
         description = re.search(r"<Description>(.*?)</Description>", project, re.DOTALL)
 
         project_entries.append({
-            "name": name.group(1) if name else None,
+            "name": projectName.group(1) if projectName else None,
             "startDate": parsingDateString(startDate.group(1)) if startDate else None,
             "endDate": parsingDateString(endDate.group(1)) if endDate else None,
             "description": description.group(1).strip() if description else None
