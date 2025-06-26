@@ -25,7 +25,7 @@ def upload_cv_files():
         uploaded_files = st.file_uploader(
             "Choose CV files", 
             accept_multiple_files=True,
-            type=['pdf', 'docx', 'txt']
+            type=['pdf', 'docx', 'odt']
         )
         
         if st.button("Upload Files", key="upload_files"):
@@ -280,7 +280,7 @@ def update_cv():
         
         with col1:
             st.subheader("Upload New File")
-            new_file = st.file_uploader("Choose new CV file", type=['pdf', 'docx', 'txt'])
+            new_file = st.file_uploader("Choose new CV file", type=['pdf', 'docx', 'odt'])
             
             if st.button("Update with File", key="update_file"):
                 if new_file:
