@@ -6,13 +6,23 @@ from sqlalchemy import func
 from database.SqlQuery import SqlQueryObject
 from database.VectorQuery import VectorQueryObject
 from settings import get_settings
-from schema.Application import Application, Education, ExperiencedSkill
-from schema.InitDB import engine
+from schema.Application import Application, Education, ExperiencedSkill, WorkExperience, Project
 from modules.parse_cv.ParsedCV import ParsedCV
 from shared.QueryObject import SearchCVQuery
 
-import uuid
+import uuid, re
 from typing import List, Dict, Any
+
+def camelCaseToText(camel_case_str: str) -> str:
+    modifiedStr = list(map(lambda x: '_' + x.lower() if x.isupper() else x, camel_case_str))
+    modifiedStr = ''.join(modifiedStr).replace('_', ' ').strip().capitalize()
+    return modifiedStr
+
+def dictToVectorStoreString(data: Dict[str, Any]) -> str:
+    """
+    Convert a dictionary to a string representation suitable for vector store.
+    """
+    return "\n".join(f"{camelCaseToText(key)}: {value}\n" for key, value in data.items() if value is not None) + '\n'
 
 settings = get_settings()
 class DBController:
@@ -29,6 +39,7 @@ class DBController:
             name=parsed_cv.name,
             email=parsed_cv.email,
             phone=parsed_cv.phone,
+            address=parsed_cv.address,
             linkedIn=parsed_cv.linkedIn,
             gitRepo=parsed_cv.gitRepo,
             yearsOfExperience=parsed_cv.totalYoE,
@@ -46,13 +57,30 @@ class DBController:
                     yearsOfExperience=skill['yearsOfExperience']
                 ) for skill in parsed_cv.experiencedSkills
             ],
+            workExperiences=[
+                WorkExperience(
+                    company=we.get('company'),
+                    position=we.get('position'),
+                    startDate=we.get('startDate'),
+                    endDate=we.get('endDate'),
+                    description=we.get('description')
+                ) for we in parsed_cv.workExperiences
+            ],
+            projects=[
+                Project(
+                    name=project.get('name'),
+                    description=project.get('description'),
+                    startDate=project.get('startDate'),
+                    endDate=project.get('endDate')
+                ) for project in parsed_cv.projects
+            ],
         )
         
         skillsAndExperienceDocument = Document(
             page_content=f"Address: {parsed_cv.address}\n" +
                          f"Skills: \n{', '.join(parsed_cv.skills)}\n\n" +
-                         f"Work Experiences: \n{'\n'.join(parsed_cv.workExperiences)}\n\n" +
-                         f"Projects: \n{'\n'.join(parsed_cv.projects)}",
+                         f"Work Experiences: \n{"".join([dictToVectorStoreString(we) for we in parsed_cv.workExperiences])}\n" +
+                         f"Projects: \n{"".join([dictToVectorStoreString(project) for project in parsed_cv.projects])}\n",
             metadata={"application_id": application.id}
         )
         return application, skillsAndExperienceDocument
@@ -99,6 +127,8 @@ class DBController:
                 "application": application,
                 "education": application.education if application.education else [],
                 "experiencedSkills": application.skills if application.skills else [],
+                "workExperiences": application.workExperiences if application.workExperiences else [],
+                "projects": application.projects if application.projects else [],
                 "skillsAndExperience": vectorDoc[0] if vectorDoc else None
             }
     
@@ -177,6 +207,8 @@ class DBController:
                     "application": application,
                     "education": education,
                     "experiencedSkills": experiencedSkills,
+                    "workExperiences": application.workExperiences if application.workExperiences else [],
+                    "projects": application.projects if application.projects else [],
                     "skillsAndExperience": correspondingExperiencedDoc.page_content if correspondingExperiencedDoc else None
                 })
         return applications
@@ -207,14 +239,8 @@ class DBController:
                     "application": application,
                     "education": application.education if application.education else [],
                     "experiencedSkills": application.skills if application.skills else [],
+                    "workExperiences": application.workExperiences if application.workExperiences else [],
+                    "projects": application.projects if application.projects else [],
                     "skillsAndExperience": vectorDoc[0].page_content if vectorDoc else None
                 })
         return { 'pageCount': totalPages, 'applications': applications }
-
-            
-
-
-            
-            
-
-        

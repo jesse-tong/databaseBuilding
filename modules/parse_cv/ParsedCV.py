@@ -21,8 +21,23 @@ class ParsedCV():
         self.gitRepo = cvData.get("gitRepo")
         self.address = cvData.get("address")
         self.totalYoE = roundYoE(str(cvData.get("totalYearsOfExperience", 0)))
-        self.workExperiences = cvData.get("workExperiences", [])
-        self.projects = cvData.get("projects", [])
+        self.workExperiences = [
+            {
+                "company": we.get("company"),
+                "position": we.get("position"),
+                "startDate": we.get("startDate"),
+                "endDate": we.get("endDate"),
+                "description": we.get("description")
+            } for we in cvData.get("workExperiences", dict())
+        ]
+        self.projects = [
+            {
+                "name": project.get("name"),
+                "startDate": project.get("startDate"),
+                "endDate": project.get("endDate"),
+                "description": project.get("description")
+            } for project in cvData.get("projects", dict())
+        ]
         self.educations = [
             {
                 "degree": edu.get("degree"),

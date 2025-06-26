@@ -14,12 +14,14 @@ async def uploadCVFiles(googleDriveUrl: Annotated[Optional[str], Form()] = None,
     """
     Upload CV files or a Google Drive link for processing.
     """
-    try:
+    return processCVController.addCVFiles(googleDriveUrl=googleDriveUrl, files=files)
+    '''try:
         return processCVController.addCVFiles(googleDriveUrl=googleDriveUrl, files=files)
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    '''
      
 @router.put("/update/{id}")
 async def updateCVFiles(id: int, 

@@ -4,6 +4,10 @@ from functools import lru_cache
 class Settings(BaseSettings):
     openai_api_key: str
 
+    langfuse_secret_key: str
+    langfuse_public_key: str
+    langfuse_host: str = "https://cloud.langfuse.com"
+
     default_model: str = "gpt-4.1-mini"
     default_cv_storage_path: str
     default_vectordb_storage_path: str

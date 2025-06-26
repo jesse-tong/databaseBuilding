@@ -115,6 +115,8 @@ class ProcessCVController:
             "application": application["application"],
             "education": application["education"],
             "experiencedSkills": application["experiencedSkills"],
+            "workExperiences": application["workExperiences"],
+            "projects": application["projects"],
             "skillsAndExperience": application["skillsAndExperience"]
         }
     

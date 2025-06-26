@@ -5,9 +5,14 @@ from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
 from langchain_core.documents import Document
 from langchain_core.runnables import RunnablePassthrough, RunnableMap
 from langchain_core.output_parsers import StrOutputParser
+from langfuse import Langfuse
+from langfuse.langchain import CallbackHandler
+from langfuse import observe, get_client
+
 from settings import get_settings
 from modules.parse_cv.ParsedCV import ParsedCV, roundYoE
-
+from dateutil.parser import parse as date_parse
+from datetime import datetime
 import re
 
 settings = get_settings()
@@ -18,6 +23,14 @@ openaiCVParsingModel = ChatOpenAI(
     api_key=settings.openai_api_key,
     max_retries=3
 )
+
+langfuseTracer = Langfuse(
+    secret_key=settings.langfuse_secret_key,
+    public_key=settings.langfuse_public_key,
+    host=settings.langfuse_host,
+)
+
+langfuseHandler = CallbackHandler()
 
 cvParsingPrompt = """
     Instruction: Parse the following CV texts (each of them are between <CV> and </CV> tags) and extract the following information in the following format (answer with no other text):
@@ -32,8 +45,12 @@ cvParsingPrompt = """
     - The total years of experience should be calculated by summing the years of experience from work experiences and significant projects (such as internships, freelance work, college/university graduation projects,... etc.).
     - The Git repository URL (like Github and GitLab) of the applicant should be in the <GitRepo> and </GitRepo> tags.
     - The address (their home address or current working address) of the applicant should be in the <Address> and </Address> tags.
-    - Each work experience entry should be in the <WorkExperience> and </WorkExperience> tags with all the text in that entry.
-    - Each project entry should be in the <Project> and </Project> tags with all the text in that entry.
+    - Each work experience entry should be in the <WorkExperience> and </WorkExperience> tags.
+    - In each work experience entry, the company name should be in <Company> and </Company>, followed by the position held in <Position> and </Position> tags, start date between <StartDate> and </StartDate> tags, 
+    end date (if applicable) between <EndDate> and </EndDate> tags, and description of the work experience in <Description> and </Description> tags.
+    - Each project entry should be in the <Project> and </Project> tags, in each project entry, the name of the project should be in <Name> and </Name> tags,
+        followed by the description of the project in <Description> and </Description> tags, start date between <StartDate> and </StartDate> tags,
+        end date (if applicable) between <EndDate> and </EndDate> tags.
     - Each education entry should be in the <Education> and </Education> tags with the following fields:
         + Degree: in the <Degree> and </Degree> tags.
         + Institution: in the <Institution> and </Institution> tags.
@@ -58,7 +75,7 @@ cvParsingPrompt = """
     - Worked on cloud computing solutions.
     - Improved system performance by 30%.
     Projects:
-    Detect Fraudulent Transactions using Machine Learning
+    Detect Fraudulent Transactions using Machine Learning June 2019 - December 2019
     - Developed a model to detect fraudulent transactions in real-time.
     - Achieved 95% accuracy in detection.
     Education:
@@ -79,19 +96,33 @@ cvParsingPrompt = """
         <YearOfExperience>4</YearOfExperience>
         <Address>123 Main St, City, Country</Address>
         <WorkExperience>
-        ExpriLabs 2022-2024
-        - Developed AI models for natural language processing.
-        - Led a team of 5 engineers.
+            <Company>ExpriLabs</Company>
+            <StartDate>2022</StartDate>
+            <EndDate>2024</EndDate>
+            <Position>Project Manager</Position>
+            <Description>
+            - Developed AI models for natural language processing.
+            - Led a team of 5 engineers.
+            </Description>
         </WorkExperience>
         <WorkExperience>
-        TechCorp 2020-2022
-        - Worked on cloud computing solutions.
-        - Improved system performance by 30%.
+            <Company>TechCorp</Company>
+            <StartDate>2020</StartDate>
+            <EndDate>2022</EndDate>
+            <Position>Cloud Engineer</Position>
+            <Description>
+            - Worked on cloud computing solutions.
+            - Improved system performance by 30%.
+            </Description>
         </WorkExperience>
         <Project>
-        Detect Fraudulent Transactions using Machine Learning
-        - Developed a model to detect fraudulent transactions in real-time.
-        - Achieved 95% accuracy in detection.
+            <Name>Detect Fraudulent Transactions using Machine Learning</Name>
+            <StartDate>June 2019</StartDate>
+            <EndDate>December 2019</EndDate>
+            <Description>
+            - Developed a model to detect fraudulent transactions in real-time.
+            - Achieved 95% accuracy in detection.
+            </Description>
         </Project>
         <Education>
             <Degree>Bachelor of Science in Computer Science</Degree>
@@ -129,6 +160,11 @@ cvParsingChain = (
     StrOutputParser() 
 )
 
+def parsingDateString(dateString: str) -> datetime | None:
+    try:
+        return date_parse(dateString)
+    except ValueError:
+        return None
 
 def parseEachCVResponse(cvText: str) -> ParsedCV:
     name = re.search(r"<Name>(.*?)</Name>", cvText)
@@ -158,6 +194,36 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
                 "gpa": gpa.group(1) if gpa else None
         })
 
+    work_experience_entries = []
+    for workExperience in workExperiences:
+        company = re.search(r"<Company>(.*?)</Company>", workExperience)
+        position = re.search(r"<Position>(.*?)</Position>", workExperience)
+        startDate = re.search(r"<StartDate>(.*?)</StartDate>", workExperience)
+        endDate = re.search(r"<EndDate>(.*?)</EndDate>", workExperience)
+        description = re.search(r"<Description>(.*?)</Description>", workExperience, re.DOTALL)
+
+        work_experience_entries.append({
+            "company": company.group(1) if company else None,
+            "position": position.group(1) if position else None,
+            "startDate": parsingDateString(startDate.group(1)) if startDate else None,
+            "endDate": parsingDateString(endDate.group(1)) if endDate else None,
+            "description": description.group(1).strip() if description else None
+        })
+
+    project_entries = []
+    for project in projects:
+        name = re.search(r"<Name>(.*?)</Name>", project)
+        startDate = re.search(r"<StartDate>(.*?)</StartDate>", project)
+        endDate = re.search(r"<EndDate>(.*?)</EndDate>", project)
+        description = re.search(r"<Description>(.*?)</Description>", project, re.DOTALL)
+
+        project_entries.append({
+            "name": name.group(1) if name else None,
+            "startDate": parsingDateString(startDate.group(1)) if startDate else None,
+            "endDate": parsingDateString(endDate.group(1)) if endDate else None,
+            "description": description.group(1).strip() if description else None
+        })
+
     return ParsedCV({
         "name": name.group(1) if name else None,
         "email": email.group(1) if email else None,
@@ -166,8 +232,8 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
         "gitRepo": gitRepo.group(1) if gitRepo else None,
         "address": address.group(1) if address else None,
         "totalYearsOfExperience": roundYoE(totalYoE.group(1)) if totalYoE else None,
-        "workExperiences": workExperiences,
-        "projects": projects,
+        "workExperiences": work_experience_entries,
+        "projects": project_entries,
         "educations": education_entries,
         "skills": skills,
         "experiencedSkills": [
@@ -179,9 +245,18 @@ def parseEachCVResponse(cvText: str) -> ParsedCV:
     })
 
 
-
+@observe(name="ParseCVs")
 def parseCVs(cvTexts: list[str], batchSize=5) -> list[ParsedCV]:
+    langfuseClient = get_client()
+
     cvCount = len(cvTexts)
+    with langfuseClient.start_as_current_span(name="ParseCVs"):
+        langfuseClient.update_current_trace(session_id="parse_cvs")
+        langfuseClient.update_current_span(
+            level="DEBUG",
+            status_message=f"Parsing {cvCount} CVs with batch size {batchSize}",
+        )
+
     if cvCount == 0:
         return []
     
@@ -196,9 +271,17 @@ def parseCVs(cvTexts: list[str], batchSize=5) -> list[ParsedCV]:
         while attempts < maxAttempts:
 
             if attempts == maxAttempts - 1:
+                with langfuseClient.start_as_current_span(name="ParseCVsError"):
+                    langfuseClient.update_current_trace(session_id="parse_cvs")
+                    langfuseClient.update_current_span(
+                        level="ERROR",
+                        status_message=f"Failed to parse CVs after {maxAttempts} attempts."
+                    )
                 raise Exception("Failed to parse CVs after multiple attempts.")
             
-            response = cvParsingChain.invoke({"cv_text": cvText})
+            # Invoke the parsing chain with the CV text
+            # Use Langfuse to trace the invocation
+            response = cvParsingChain.invoke({"cv_text": cvText}, config={"callbacks": [langfuseHandler], "metadata": {"langfuse_session_id": "parse_cvs"}})
             response = re.findall(r"<ParsedCV>(.*?)</ParsedCV>", response, re.DOTALL)
             
             if not response or not isinstance(response, list) or len(response) == 0:
